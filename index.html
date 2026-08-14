@@ -130,6 +130,16 @@
   .synopsis{margin-top:22px;background:var(--panel-2);border-left:3px solid var(--gold);border-radius:4px;padding:20px 22px;font-size:14px;line-height:1.8;color:var(--ink);}
   .synopsis .syn-label{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--gold);letter-spacing:.15em;text-transform:uppercase;margin-bottom:10px;}
 
+  .vs-wrap{display:grid;grid-template-columns:1fr auto 1fr;gap:20px;align-items:start;margin-top:16px;}
+  .vs-side{background:var(--panel-2);border:1px solid var(--line);border-radius:6px;padding:20px;}
+  .vs-side.winner{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset;}
+  .vs-side h3{font-family:'Bebas Neue',sans-serif;font-size:22px;margin:0 0 4px;color:var(--gold);}
+  .vs-side .vs-total{font-family:'Bebas Neue',sans-serif;font-size:40px;color:var(--ink);margin:6px 0 12px;}
+  .vs-side .vs-syn{font-size:12.5px;color:var(--ink-dim);line-height:1.6;}
+  .vs-badge{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--gold);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;}
+  .vs-mid{display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:34px;color:var(--violet);padding-top:60px;}
+  @media(max-width:800px){ .vs-wrap{grid-template-columns:1fr;} .vs-mid{padding-top:0;} }
+
   footer.actions{display:flex;justify-content:center;margin-top:30px;gap:12px;}
   @media(max-width:600px){ #coverScreen h1{font-size:52px;} .brand h1{font-size:38px;} .scorebox{text-align:left;} }
 </style>
@@ -210,16 +220,12 @@
     <div class="event-outcome hidden" id="eventOutcome"></div>
   </div>
 
-  <footer class="actions"><button id="resultBtn" class="ghost hidden">🏆 Ver resultado do filme</button></footer>
+  <footer class="actions"><button id="resultBtn" class="ghost hidden">🏆 Ver resultado vs Computador</button></footer>
 
   <div class="result hidden" id="resultBox">
     <h2 id="resultTitle"></h2>
     <p id="resultText"></p>
-    <div class="film-scores" id="filmScores"></div>
-    <div class="synopsis">
-      <div class="syn-label">Sinopse</div>
-      <div id="synopsisText"></div>
-    </div>
+    <div class="vs-wrap" id="vsWrap"></div>
   </div>
 
 </div>
@@ -536,39 +542,109 @@ eventBtn.onclick = ()=>{
 /* ============= RESULTADO ============= */
 function avg(actors, key){ return actors.reduce((s,a)=>s+a[key],0) / actors.length; }
 
-function computeFilmScores(){
+function computeFilmScores(cast, evDelta){
   const actors = Object.values(cast);
-  const genreFit = 60 + (eventDelta>0?5:eventDelta<0?-5:0); // placeholder base, ajustado por evento
+  const genreFit = 60 + (evDelta>0?5:evDelta<0?-5:0);
   return [
     {label:"Elenco em Conjunto", val: Math.round((avg(actors,'carisma')+avg(actors,'versat'))/2)},
     {label:"Direção Artística/Coerência", val: Math.round(Math.min(99, Math.max(20, genreFit + (avg(actors,'versat')-50)/3)))},
     {label:"Bilheteria Projetada", val: Math.round((avg(actors,'bilheteria')+avg(actors,'cache'))/2)},
     {label:"Potencial de Premiação", val: Math.round((avg(actors,'prestige')+avg(actors,'prof'))/2)},
-    {label:"Buzz Cultural", val: Math.round(Math.min(99, avg(actors,'carisma')*0.6 + avg(actors,'cache')*0.4 + eventDelta)) },
+    {label:"Buzz Cultural", val: Math.round(Math.min(99, avg(actors,'carisma')*0.6 + avg(actors,'cache')*0.4 + evDelta)) },
   ];
 }
 
+function totalOf(filmScores){ return filmScores.reduce((s,f)=>s+f.val,0); }
+
+function buildSynopsisFor(castObj, genre){
+  const g = genre || GENRES[0];
+  const princ = castObj["Ator/Atriz principal"];
+  const par = castObj["Par romântico"];
+  const vilao = castObj["Vilão"];
+  const vilaoBom = castObj["Vilão que se torna bonzinho no final"];
+  const amigo = castObj["Melhor amigo(a)"];
+  const irmao = castObj["Irmão(ã) do personagem principal"];
+  const mae = castObj["Mãe"];
+  const pai = castObj["Pai"];
+  const triangulo = castObj["Terceira pessoa do triângulo amoroso"];
+  const coringa = castObj[WILDCARD_ROLE];
+
+  let s = `${princ.name} vive o centro de um ${g.name.toLowerCase()} que exige ${g.synVerb}. `;
+  if(pai || mae){ s += `Em casa, ${[pai?pai.name:null, mae?mae.name:null].filter(Boolean).join(" e ")} tentam segurar as pontas. `; }
+  if(irmao){ s += `${irmao.name} entra como a única pessoa disposta a dizer a verdade. `; }
+  if(amigo){ s += `${amigo.name} é o alívio cômico que ninguém sabia que precisava. `; }
+  if(par && triangulo){ s += `${princ.name} se divide entre ${par.name} e ${triangulo.name}. `; }
+  else if(par){ s += `${par.name} entra como o par romântico que muda tudo. `; }
+  if(vilao){ s += `${vilao.name} comanda a ameaça que dá o tom do filme. `; }
+  if(vilaoBom){ s += `${vilaoBom.name} vira a virada de mesa que ninguém esperava. `; }
+  if(coringa && coringa.wildcardChoice){ s += `${coringa.name} surge como ${coringa.wildcardChoice.toLowerCase()}. `; }
+  s += `Um filme sobre o que sobra quando todo mundo já jogou suas cartas.`;
+  return s;
+}
+
+function buildSynopsis(){ return buildSynopsisFor(cast, selectedGenre); }
+
+/* ---- simula uma partida inteira do computador, mesmas regras ---- */
+function simulateCpuFilm(){
+  const cpuGenre = GENRES[Math.floor(Math.random()*GENRES.length)];
+  const cpuCast = {};
+  const usedCpu = new Set();
+  ROLES.forEach(role=>{
+    const available = CATEGORIES.filter(c=>!usedCpu.has(c.cat));
+    const pool = available.length ? available : CATEGORIES;
+    const chosenCat = pool[Math.floor(Math.random()*pool.length)];
+    usedCpu.add(chosenCat.cat);
+    const name = chosenCat.people[Math.floor(Math.random()*chosenCat.people.length)];
+    const person = buildPerson(name, chosenCat.cat);
+    if(role===WILDCARD_ROLE){ person.wildcardChoice = WILDCARD_OPTIONS[Math.floor(Math.random()*WILDCARD_OPTIONS.length)]; }
+    cpuCast[role] = person;
+  });
+  const cpuEvent = EVENTS[Math.floor(Math.random()*EVENTS.length)];
+  const cpuOpt = cpuEvent.options[Math.floor(Math.random()*cpuEvent.options.length)];
+  const cpuEventDelta = cpuOpt.delta;
+  return {genre:cpuGenre, cast:cpuCast, eventDelta:cpuEventDelta};
+}
+
 resultBtn.onclick = ()=>{
-  const filmScores = computeFilmScores();
-  const fsHtml = filmScores.map(fs=>`
-    <div class="fs-card">
-      <div class="fs-label">${fs.label}</div>
-      <div class="fs-bar"><div class="fs-fill" style="width:${Math.max(0,Math.min(100,fs.val))}%"></div></div>
-      <div class="fs-val">${fs.val}</div>
+  const playerScores = computeFilmScores(cast, eventDelta);
+  const playerTotal = totalOf(playerScores);
+  const playerSynopsis = buildSynopsis();
+
+  const cpu = simulateCpuFilm();
+  const cpuScores = computeFilmScores(cpu.cast, cpu.eventDelta);
+  const cpuTotal = totalOf(cpuScores);
+  const cpuSynopsis = buildSynopsisFor(cpu.cast, cpu.genre);
+
+  const playerWins = playerTotal >= cpuTotal;
+
+  document.getElementById('resultTitle').textContent = `${selectedGenre.name} vs ${cpu.genre.name} — quem levou essa?`;
+  document.getElementById('resultText').textContent = playerWins
+    ? "Seu filme superou a produção rival do estúdio concorrente!"
+    : "Dessa vez o estúdio concorrente saiu na frente — mas a disputa foi boa.";
+
+  document.getElementById('vsWrap').innerHTML = `
+    <div class="vs-side ${playerWins?'winner':''}">
+      <div class="vs-badge">Seu filme · ${playerWins?'🏆 vencedor':''}</div>
+      <h3>${selectedGenre.name}</h3>
+      <div class="vs-total">${playerTotal}</div>
+      <div class="film-scores">${playerScores.map(fs=>`
+        <div class="fs-card"><div class="fs-label">${fs.label}</div>
+        <div class="fs-bar"><div class="fs-fill" style="width:${Math.max(0,Math.min(100,fs.val))}%"></div></div>
+        <div class="fs-val">${fs.val}</div></div>`).join('')}</div>
+      <p class="vs-syn">${playerSynopsis}</p>
     </div>
-  `).join('');
-  document.getElementById('filmScores').innerHTML = fsHtml;
-
-  const top = filmScores.reduce((a,b)=> b.val>a.val?b:a);
-  let verdict;
-  if(top.label==="Potencial de Premiação") verdict = "Esse elenco cheira temporada de premiação — provável indicado a Oscar, bilheteria de nicho.";
-  else if(top.label==="Bilheteria Projetada") verdict = "Blockbuster garantido — vai bombar no fim de semana de estreia, crítica é o de menos.";
-  else if(top.label==="Buzz Cultural") verdict = "O filme que todo mundo vai comentar nas redes, pra bem ou pra mal.";
-  else verdict = "Um filme tecnicamente sólido, com elenco coeso e bem entrosado.";
-
-  document.getElementById('resultTitle').textContent = `Seu filme de ${selectedGenre ? selectedGenre.name : "gênero indefinido"} está pronto`;
-  document.getElementById('resultText').textContent = verdict;
-  document.getElementById('synopsisText').textContent = buildSynopsis();
+    <div class="vs-mid">VS</div>
+    <div class="vs-side ${!playerWins?'winner':''}">
+      <div class="vs-badge">Estúdio concorrente (CPU) · ${!playerWins?'🏆 vencedor':''}</div>
+      <h3>${cpu.genre.name}</h3>
+      <div class="vs-total">${cpuTotal}</div>
+      <div class="film-scores">${cpuScores.map(fs=>`
+        <div class="fs-card"><div class="fs-label">${fs.label}</div>
+        <div class="fs-bar"><div class="fs-fill" style="width:${Math.max(0,Math.min(100,fs.val))}%"></div></div>
+        <div class="fs-val">${fs.val}</div></div>`).join('')}</div>
+      <p class="vs-syn">${cpuSynopsis}</p>
+    </div>
+  `;
 
   eventBtn.classList.add('hidden');
   resultBtn.classList.add('hidden');
@@ -576,36 +652,6 @@ resultBtn.onclick = ()=>{
   resultBox.scrollIntoView({behavior:'smooth', block:'center'});
 };
 
-function buildSynopsis(){
-  const g = selectedGenre || GENRES[0];
-  const princ = cast["Ator/Atriz principal"];
-  const par = cast["Par romântico"];
-  const vilao = cast["Vilão"];
-  const vilaoBom = cast["Vilão que se torna bonzinho no final"];
-  const amigo = cast["Melhor amigo(a)"];
-  const irmao = cast["Irmão(ã) do personagem principal"];
-  const mae = cast["Mãe"];
-  const pai = cast["Pai"];
-  const triangulo = cast["Terceira pessoa do triângulo amoroso"];
-  const coringa = cast[WILDCARD_ROLE];
-
-  let s = `${princ.name} vive o centro de um ${g.name.toLowerCase()} que exige ${g.synVerb}. `;
-  if(pai || mae){
-    s += `Em casa, ${[pai?pai.name:null, mae?mae.name:null].filter(Boolean).join(" e ")} tentam segurar as pontas enquanto tudo desmorona ao redor. `;
-  }
-  if(irmao){ s += `${irmao.name} entra como a única pessoa disposta a dizer a verdade, mesmo quando ninguém quer ouvir. `; }
-  if(amigo){ s += `${amigo.name} é o alívio cômico que ninguém sabia que precisava até precisar de verdade. `; }
-  if(par && triangulo){
-    s += `No meio disso, ${princ.name} se divide entre ${par.name} e ${triangulo.name} — e nem todo mundo vai sair ileso dessa escolha. `;
-  } else if(par){
-    s += `${par.name} entra como o par romântico que muda tudo o que ${princ.name} pensava que queria. `;
-  }
-  if(vilao){ s += `${vilao.name} comanda a ameaça que dá o tom do filme inteiro. `; }
-  if(vilaoBom){ s += `E, contra todas as expectativas, ${vilaoBom.name} vira a virada de mesa que ninguém viu chegar. `; }
-  if(coringa && coringa.wildcardChoice){ s += `${coringa.name} surge como ${coringa.wildcardChoice.toLowerCase()} — a peça que ninguém esperava, mas que muda o rumo da história. `; }
-  s += `Um filme sobre o que sobra quando todo mundo já jogou suas cartas.`;
-  return s;
-}
 </script>
 </body>
 </html>
