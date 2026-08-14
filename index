@@ -1,1 +1,498 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ELENCO — Monte seu time dos sonhos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B0B0E;
+    --panel:#151319;
+    --panel-2:#1C1922;
+    --burgundy:#4A1023;
+    --gold:#E8B54D;
+    --gold-dim:#8a6c2e;
+    --ink:#F2EDE4;
+    --ink-dim:#9A94A3;
+    --violet:#6C5B7B;
+    --line:#2A2732;
+    --good:#7FBF8E;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 15% 0%, rgba(74,16,35,0.35), transparent 45%),
+      radial-gradient(circle at 85% 10%, rgba(108,91,123,0.25), transparent 40%),
+      var(--bg);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    padding:0 0 80px 0;
+  }
+  .wrap{max-width:1100px;margin:0 auto;padding:32px 20px 0;}
 
+  /* HEADER / MARQUEE */
+  header{
+    display:flex;justify-content:space-between;align-items:flex-end;
+    border-bottom:1px solid var(--line);
+    padding-bottom:18px;margin-bottom:28px;
+    flex-wrap:wrap;gap:16px;
+  }
+  .brand{display:flex;flex-direction:column;}
+  .brand .eyebrow{
+    font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.18em;
+    color:var(--gold);text-transform:uppercase;margin-bottom:6px;
+  }
+  .brand h1{
+    font-family:'Bebas Neue',sans-serif;font-size:52px;line-height:.85;
+    letter-spacing:.02em;margin:0;color:var(--ink);
+  }
+  .brand h1 span{color:var(--gold);}
+  .scorebox{
+    background:var(--panel);border:1px solid var(--line);border-radius:4px;
+    padding:12px 20px;text-align:right;min-width:170px;
+  }
+  .scorebox .label{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-dim);letter-spacing:.12em;text-transform:uppercase;}
+  .scorebox .value{font-family:'Bebas Neue',sans-serif;font-size:38px;color:var(--gold);line-height:1;}
+
+  /* GENRE DRAW */
+  .draw-stage{
+    background:var(--panel);border:1px solid var(--line);border-radius:6px;
+    padding:28px;margin-bottom:32px;display:flex;align-items:center;gap:28px;flex-wrap:wrap;
+  }
+  .ticket{
+    position:relative;background:var(--burgundy);border-radius:4px;
+    padding:22px 30px;min-width:260px;flex:1;
+    background-image:radial-gradient(circle,#000 2px,transparent 2.2px);
+    background-size:14px 100%;background-position:left center,right center;
+    background-repeat:no-repeat;
+    border:1px dashed var(--gold-dim);
+  }
+  .ticket .tlabel{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--gold);letter-spacing:.15em;text-transform:uppercase;}
+  .ticket .tgenre{font-family:'Bebas Neue',sans-serif;font-size:42px;color:var(--ink);margin-top:4px;letter-spacing:.02em;}
+  .ticket .thint{font-size:12px;color:#d8c9cf;margin-top:6px;}
+  button{
+    font-family:'Inter',sans-serif;font-weight:700;font-size:14px;
+    border:none;border-radius:3px;padding:14px 26px;cursor:pointer;
+    background:var(--gold);color:#1a1408;letter-spacing:.02em;
+    transition:transform .12s ease, box-shadow .12s ease;
+  }
+  button:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(232,181,77,.25);}
+  button:active{transform:translateY(0);}
+  button.ghost{
+    background:transparent;color:var(--gold);border:1px solid var(--gold-dim);
+  }
+  button.ghost:hover{box-shadow:none;background:rgba(232,181,77,.08);}
+  button:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none;}
+
+  /* ROLES GRID */
+  .roles-title{
+    font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--ink);
+    letter-spacing:.02em;margin:0 0 4px;
+  }
+  .roles-sub{color:var(--ink-dim);font-size:13px;margin:0 0 20px;}
+  .grid{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));
+    gap:14px;margin-bottom:40px;
+  }
+  .slot{
+    background:var(--panel);border:1px solid var(--line);border-radius:5px;
+    padding:16px;min-height:150px;display:flex;flex-direction:column;justify-content:space-between;
+    cursor:pointer;transition:border-color .15s ease, background .15s ease;
+    position:relative;overflow:hidden;
+  }
+  .slot:hover{border-color:var(--gold-dim);background:var(--panel-2);}
+  .slot .role-name{
+    font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--violet);
+    letter-spacing:.1em;text-transform:uppercase;
+  }
+  .slot .empty-cta{
+    color:var(--ink-dim);font-size:13px;margin-top:auto;
+  }
+  .slot .filled{display:flex;align-items:center;gap:12px;margin-top:8px;}
+  .avatar{
+    width:46px;height:46px;border-radius:50%;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Bebas Neue',sans-serif;font-size:18px;color:#111;
+  }
+  .actor-name{font-weight:700;font-size:14px;color:var(--ink);}
+  .actor-role{font-size:11.5px;color:var(--ink-dim);margin-top:1px;}
+  .stat-row{
+    display:flex;gap:8px;margin-top:12px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--gold);
+  }
+  .stat-chip{background:rgba(232,181,77,.1);border:1px solid var(--gold-dim);border-radius:3px;padding:3px 6px;}
+
+  /* MODAL */
+  .overlay{
+    position:fixed;inset:0;background:rgba(6,5,8,.78);backdrop-filter:blur(3px);
+    display:none;align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto;z-index:50;
+  }
+  .overlay.open{display:flex;}
+  .modal{
+    background:var(--panel);border:1px solid var(--line);border-radius:8px;
+    max-width:760px;width:100%;padding:26px;
+  }
+  .modal-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;}
+  .modal-head h2{font-family:'Bebas Neue',sans-serif;font-size:30px;margin:0;letter-spacing:.02em;}
+  .modal-head .close{background:none;border:none;color:var(--ink-dim);font-size:22px;cursor:pointer;padding:0;}
+  .modal-sub{color:var(--ink-dim);font-size:12.5px;margin-bottom:18px;}
+  .pool{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;max-height:60vh;overflow-y:auto;padding-right:4px;}
+  .pool-item{
+    background:var(--panel-2);border:1px solid var(--line);border-radius:5px;padding:12px;
+    display:flex;gap:10px;align-items:center;cursor:pointer;transition:border-color .12s;
+  }
+  .pool-item:hover{border-color:var(--gold);}
+  .pool-item .pname{font-size:13px;font-weight:700;}
+  .pool-item .pcredit{font-size:11px;color:var(--ink-dim);margin-top:1px;}
+
+  /* RESULT */
+  .result{
+    background:var(--panel);border:1px solid var(--gold-dim);border-radius:6px;
+    padding:28px;margin-top:12px;display:none;
+  }
+  .result.open{display:block;}
+  .result h2{font-family:'Bebas Neue',sans-serif;font-size:34px;margin:0 0 10px;color:var(--gold);}
+  .result p{color:var(--ink-dim);font-size:14px;line-height:1.6;}
+  .breakdown{display:flex;gap:20px;margin-top:16px;flex-wrap:wrap;}
+  .bd-item{background:var(--panel-2);border:1px solid var(--line);border-radius:5px;padding:12px 18px;}
+  .bd-item .bd-label{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-dim);letter-spacing:.1em;text-transform:uppercase;}
+  .bd-item .bd-val{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--ink);}
+
+  footer.actions{display:flex;justify-content:center;margin-top:30px;gap:12px;}
+  .alloc-banner{
+    background:rgba(232,181,77,.1);border:1px solid var(--gold-dim);border-radius:5px;
+    padding:12px 18px;margin-bottom:18px;font-size:14px;color:var(--ink);
+  }
+  .alloc-banner strong{color:var(--gold);}
+  .slot.assignable{border-color:var(--gold);cursor:pointer;}
+  .slot.assignable:hover{background:rgba(232,181,77,.08);}
+  .slot.locked{cursor:default;opacity:.55;}
+  .slot.locked:hover{border-color:var(--line);background:var(--panel);}
+  @media(max-width:600px){
+    .brand h1{font-size:38px;}
+    .scorebox{text-align:left;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <span class="eyebrow">Fantasy Studio · protótipo</span>
+      <h1>ELENC<span>O</span></h1>
+    </div>
+    <div class="scorebox">
+      <div class="label">Pontuação do time</div>
+      <div class="value" id="scoreTotal">0</div>
+    </div>
+  </header>
+
+  <div class="draw-stage">
+    <div class="ticket">
+      <div class="tlabel">Gênero sorteado</div>
+      <div class="tgenre" id="genreLabel">???</div>
+      <div class="thint" id="genreHint">clique em sortear pra descobrir o filme que você vai produzir</div>
+    </div>
+    <button id="drawBtn">🎬 Sortear gênero</button>
+  </div>
+
+  <div class="draw-stage" id="drawPersonStage">
+    <div class="ticket" style="background:var(--panel-2);border-color:var(--violet);">
+      <div class="tlabel" id="categoryLabel">Categoria sorteada</div>
+      <div class="tgenre" id="personLabel" style="font-size:30px;">???</div>
+      <div class="thint" id="personHint">sorteie uma categoria pra revelar quem entra no jogo</div>
+    </div>
+    <button id="drawPersonBtn">🎲 Sortear categoria</button>
+  </div>
+
+  <div class="alloc-banner" id="allocBanner" style="display:none;">
+    Agora escolha em qual posição <strong id="allocName"></strong> vai entrar
+  </div>
+
+  <h2 class="roles-title">Sua escalação</h2>
+  <p class="roles-sub">As posições vão sendo preenchidas conforme você sorteia e aloca cada pessoa. Sem volta atrás!</p>
+  <div class="grid" id="rolesGrid"></div>
+
+  <footer class="actions">
+    <button id="resultBtn" class="ghost" disabled>Ver resultado do filme</button>
+  </footer>
+
+  <div class="result" id="resultBox">
+    <h2 id="resultTitle"></h2>
+    <p id="resultText"></p>
+    <div class="breakdown" id="breakdown"></div>
+  </div>
+
+</div>
+
+<script>
+const GENRES = [
+  {name:"Terror", hint:"suspense, sustos e um vilão que ninguém esquece"},
+  {name:"Comédia Romântica", hint:"clichê proposital, química é tudo"},
+  {name:"Ação/Blockbuster", hint:"explosões, carisma e uma cena pós-crédito"},
+  {name:"Drama Premiado", hint:"pensando já na temporada de premiações"},
+  {name:"Musical", hint:"se não canta, não entra"},
+  {name:"Suspense Psicológico", hint:"ninguém é quem parece ser"}
+];
+
+const ROLES = [
+  "Ator/Atriz principal","Irmão(ã) do personagem principal","Pai","Mãe",
+  "Melhor amigo(a)","Par romântico","Terceira pessoa do triângulo amoroso",
+  "Vilão","Vilão que se torna bonzinho no final"
+];
+const R = {
+  PRINC:"Ator/Atriz principal", IRMAO:"Irmão(ã) do personagem principal",
+  PAI:"Pai", MAE:"Mãe", AMIGO:"Melhor amigo(a)", PAR:"Par romântico",
+  TRIANGULO:"Terceira pessoa do triângulo amoroso", VILAO:"Vilão", VILAO_BOM:"Vilão que se torna bonzinho no final"
+};
+
+// categorias — em produção seriam ~50, aqui uma amostra representativa
+// cada categoria sorteia UMA pessoa dela por vez (sem escolha livre)
+const CATEGORIES = [
+  {cat:"Drama premiado · veterano(a)", people:[
+    {name:"Meryl Streep", buzz:6, prestige:10, boxoffice:6, roles:[R.PRINC,R.MAE,R.VILAO]},
+    {name:"Denzel Washington", buzz:6, prestige:9, boxoffice:7, roles:[R.PRINC,R.PAI,R.VILAO]},
+  ]},
+  {cat:"Ascensão indie/premiado", people:[
+    {name:"Timothée Chalamet", buzz:9, prestige:8, boxoffice:7, roles:[R.PRINC,R.IRMAO,R.PAR]},
+    {name:"Saoirse Ronan", buzz:6, prestige:8, boxoffice:5, roles:[R.PRINC,R.IRMAO,R.PAR]},
+  ]},
+  {cat:"Terror moderno", people:[
+    {name:"Anya Taylor-Joy", buzz:8, prestige:6, boxoffice:7, roles:[R.PRINC,R.VILAO,R.TRIANGULO]},
+    {name:"Florence Pugh", buzz:8, prestige:8, boxoffice:6, roles:[R.PRINC,R.IRMAO,R.VILAO_BOM]},
+  ]},
+  {cat:"Vilão clássico de terror", people:[
+    {name:"Anthony Hopkins", buzz:5, prestige:10, boxoffice:5, roles:[R.VILAO,R.PAI]},
+  ]},
+  {cat:"It girl 2010s", people:[
+    {name:"Margot Robbie", buzz:9, prestige:7, boxoffice:9, roles:[R.PRINC,R.PAR,R.TRIANGULO]},
+    {name:"Jennifer Lawrence", buzz:8, prestige:8, boxoffice:8, roles:[R.PRINC,R.IRMAO,R.PAR]},
+  ]},
+  {cat:"Galã atual", people:[
+    {name:"Glen Powell", buzz:8, prestige:5, boxoffice:7, roles:[R.PRINC,R.PAR,R.AMIGO]},
+    {name:"Jacob Elordi", buzz:8, prestige:5, boxoffice:6, roles:[R.PAR,R.TRIANGULO,R.VILAO]},
+  ]},
+  {cat:"It girl atual", people:[
+    {name:"Sydney Sweeney", buzz:9, prestige:5, boxoffice:7, roles:[R.PRINC,R.PAR,R.TRIANGULO]},
+  ]},
+  {cat:"Super-herói atual", people:[
+    {name:"Tom Holland", buzz:8, prestige:5, boxoffice:9, roles:[R.PRINC,R.IRMAO,R.AMIGO]},
+  ]},
+  {cat:"Hot em blockbusters atuais", people:[
+    {name:"Zendaya", buzz:9, prestige:7, boxoffice:8, roles:[R.PRINC,R.PAR,R.IRMAO]},
+  ]},
+  {cat:"Comediante 2000s/2010s", people:[
+    {name:"Adam Sandler", buzz:6, prestige:4, boxoffice:7, roles:[R.PRINC,R.PAI,R.AMIGO]},
+  ]},
+  {cat:"Galã 1990s", people:[
+    {name:"Brad Pitt", buzz:8, prestige:8, boxoffice:8, roles:[R.PRINC,R.PAR,R.PAI]},
+  ]},
+  {cat:"It girl 2000s", people:[
+    {name:"Megan Fox", buzz:7, prestige:3, boxoffice:6, roles:[R.PAR,R.TRIANGULO]},
+  ]},
+  {cat:"Veterano(a) premiado(a)", people:[
+    {name:"Tom Hanks", buzz:6, prestige:9, boxoffice:8, roles:[R.PRINC,R.PAI,R.VILAO_BOM]},
+    {name:"Cate Blanchett", buzz:6, prestige:10, boxoffice:6, roles:[R.PRINC,R.MAE,R.VILAO]},
+  ]},
+  {cat:"Vilão de blockbuster/ação", people:[
+    {name:"Javier Bardem", buzz:6, prestige:8, boxoffice:6, roles:[R.VILAO,R.PAI]},
+  ]},
+  {cat:"Scream queen clássica", people:[
+    {name:"Jamie Lee Curtis", buzz:5, prestige:7, boxoffice:5, roles:[R.PRINC,R.MAE,R.VILAO_BOM]},
+  ]},
+  {cat:"Vilão cômico/carismático", people:[
+    {name:"Jack Nicholson", buzz:6, prestige:9, boxoffice:6, roles:[R.VILAO,R.VILAO_BOM]},
+  ]},
+  {cat:"It girl 1990s", people:[
+    {name:"Winona Ryder", buzz:6, prestige:6, boxoffice:5, roles:[R.PRINC,R.IRMAO,R.PAR]},
+  ]},
+  {cat:"Hot em séries de ação (streaming)", people:[
+    {name:"Pedro Pascal", buzz:9, prestige:6, boxoffice:6, roles:[R.PAI,R.PRINC,R.VILAO_BOM]},
+  ]},
+  {cat:"Hot em séries teen (streaming)", people:[
+    {name:"Jenna Ortega", buzz:8, prestige:5, boxoffice:6, roles:[R.PRINC,R.IRMAO,R.TRIANGULO]},
+  ]},
+  {cat:"Hot em filmes premiados atuais", people:[
+    {name:"Barry Keoghan", buzz:7, prestige:7, boxoffice:5, roles:[R.VILAO,R.AMIGO,R.IRMAO]},
+  ]},
+  {cat:"Melhor amigo(a) cômico", people:[
+    {name:"Rebel Wilson", buzz:5, prestige:3, boxoffice:5, roles:[R.PRINC,R.MAE,R.IRMAO]},
+  ]},
+  {cat:"Coadjuvante icônico", people:[
+    {name:"Samuel L. Jackson", buzz:6, prestige:6, boxoffice:8, roles:[R.PAI,R.VILAO,R.AMIGO]},
+  ]},
+];
+
+const AV_COLORS = ["#E8B54D","#6C5B7B","#7FBF8E","#B85C7A","#5C8AB8","#C9975A"];
+
+let selectedGenre = null;
+let cast = {}; // role -> {name,credit,buzz,prestige,boxoffice}
+let usedCategories = new Set();
+let pendingPerson = null; // pessoa sorteada aguardando alocação
+
+const genreLabel = document.getElementById('genreLabel');
+const genreHint = document.getElementById('genreHint');
+const rolesGrid = document.getElementById('rolesGrid');
+const scoreTotal = document.getElementById('scoreTotal');
+const resultBtn = document.getElementById('resultBtn');
+const resultBox = document.getElementById('resultBox');
+const drawPersonBtn = document.getElementById('drawPersonBtn');
+const categoryLabel = document.getElementById('categoryLabel');
+const personLabel = document.getElementById('personLabel');
+const personHint = document.getElementById('personHint');
+const allocBanner = document.getElementById('allocBanner');
+const allocName = document.getElementById('allocName');
+
+function initials(name){
+  return name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+}
+
+function remainingRoles(){
+  return ROLES.filter(r=>!cast[r]);
+}
+
+function eligibleRemainingRoles(person){
+  return remainingRoles().filter(r=> person.roles.includes(r));
+}
+
+function renderRoles(){
+  rolesGrid.innerHTML = '';
+  const waitingAlloc = !!pendingPerson;
+  const eligibleNow = waitingAlloc ? eligibleRemainingRoles(pendingPerson) : [];
+  const forcedMode = waitingAlloc && eligibleNow.length === 0;
+  ROLES.forEach(role=>{
+    const actor = cast[role];
+    const slot = document.createElement('div');
+    slot.className = 'slot';
+    if(actor){
+      const color = AV_COLORS[ROLES.indexOf(role) % AV_COLORS.length];
+      slot.innerHTML = `
+        <div class="role-name">${role}</div>
+        <div class="filled">
+          <div class="avatar" style="background:${color}">${initials(actor.name)}</div>
+          <div>
+            <div class="actor-name">${actor.name}</div>
+            <div class="actor-role">${actor.credit}</div>
+          </div>
+        </div>
+        <div class="stat-row">
+          <span class="stat-chip">buzz ${actor.buzz}</span>
+          <span class="stat-chip">prestígio ${actor.prestige}</span>
+          <span class="stat-chip">bilheteria ${actor.boxoffice}</span>
+        </div>
+      `;
+    } else if(waitingAlloc && (forcedMode || eligibleNow.includes(role))){
+      slot.classList.add('assignable');
+      slot.onclick = ()=>assignPending(role);
+      const label = forcedMode ? `⚠️ encaixe forçado aqui` : `👉 colocar ${pendingPerson.name} aqui`;
+      slot.innerHTML = `
+        <div class="role-name">${role}</div>
+        <div class="empty-cta">${label}</div>
+      `;
+    } else if(waitingAlloc){
+      slot.classList.add('locked');
+      slot.innerHTML = `
+        <div class="role-name">${role}</div>
+        <div class="empty-cta">não é o perfil de ${pendingPerson.name}</div>
+      `;
+    } else {
+      slot.classList.add('locked');
+      slot.innerHTML = `
+        <div class="role-name">${role}</div>
+        <div class="empty-cta">aguardando sorteio</div>
+      `;
+    }
+    rolesGrid.appendChild(slot);
+  });
+  updateScore();
+}
+
+function assignPending(role){
+  if(!pendingPerson) return;
+  cast[role] = pendingPerson;
+  pendingPerson = null;
+  allocBanner.style.display = 'none';
+  personLabel.textContent = '???';
+  personHint.textContent = remainingRoles().length
+    ? 'sorteie a próxima categoria pra continuar montando o time'
+    : 'escalação completa!';
+  categoryLabel.textContent = 'Categoria sorteada';
+  drawPersonBtn.disabled = remainingRoles().length === 0;
+  renderRoles();
+}
+
+function updateScore(){
+  const actors = Object.values(cast);
+  let total = 0;
+  actors.forEach(a=> total += a.buzz + a.prestige + a.boxoffice);
+  scoreTotal.textContent = total;
+  resultBtn.disabled = actors.length < ROLES.length;
+}
+
+document.getElementById('drawBtn').onclick = ()=>{
+  const g = GENRES[Math.floor(Math.random()*GENRES.length)];
+  selectedGenre = g;
+  genreLabel.textContent = g.name;
+  genreHint.textContent = g.hint;
+  resultBox.classList.remove('open');
+};
+
+drawPersonBtn.onclick = ()=>{
+  if(pendingPerson) return; // precisa alocar antes de sortear de novo
+  if(remainingRoles().length === 0) return;
+
+  const available = CATEGORIES.filter(c=>!usedCategories.has(c.cat));
+  const pool = available.length ? available : CATEGORIES;
+  const chosenCat = pool[Math.floor(Math.random()*pool.length)];
+  usedCategories.add(chosenCat.cat);
+  const person = chosenCat.people[Math.floor(Math.random()*chosenCat.people.length)];
+
+  pendingPerson = {...person, credit: chosenCat.cat};
+  categoryLabel.textContent = chosenCat.cat;
+  personLabel.textContent = person.name;
+  const forced = eligibleRemainingRoles(pendingPerson).length === 0;
+  personHint.textContent = forced
+    ? 'nenhuma posição do perfil dela(e) sobrou — vai ter que forçar em algum lugar'
+    : 'escolha em qual posição essa pessoa vai entrar, aí embaixo';
+  allocName.textContent = person.name;
+  allocBanner.style.display = 'block';
+  allocBanner.innerHTML = forced
+    ? `⚠️ Nenhuma posição combina com o perfil de <strong>${person.name}</strong> — escolha onde forçar o encaixe`
+    : `Agora escolha em qual posição <strong>${person.name}</strong> vai entrar`;
+  renderRoles();
+  allocBanner.scrollIntoView({behavior:'smooth', block:'center'});
+};
+
+resultBtn.onclick = ()=>{
+  const actors = Object.values(cast);
+  const buzz = actors.reduce((s,a)=>s+a.buzz,0);
+  const prestige = actors.reduce((s,a)=>s+a.prestige,0);
+  const box = actors.reduce((s,a)=>s+a.boxoffice,0);
+  const total = buzz+prestige+box;
+
+  document.getElementById('breakdown').innerHTML = `
+    <div class="bd-item"><div class="bd-label">Buzz</div><div class="bd-val">${buzz}</div></div>
+    <div class="bd-item"><div class="bd-label">Prestígio</div><div class="bd-val">${prestige}</div></div>
+    <div class="bd-item"><div class="bd-label">Bilheteria</div><div class="bd-val">${box}</div></div>
+    <div class="bd-item"><div class="bd-label">Total</div><div class="bd-val">${total}</div></div>
+  `;
+
+  let verdict;
+  if(prestige >= buzz && prestige >= box) verdict = "Esse elenco cheira temporada de premiação — provável indicado a Oscar, bilheteria de nicho.";
+  else if(box >= buzz && box >= prestige) verdict = "Blockbuster garantido — vai bombar no fim de semana de estreia, crítica é o de menos.";
+  else verdict = "Filme "+"queridinho das redes"+" — todo mundo vai comentar, mesmo que a crítica implique.";
+
+  document.getElementById('resultTitle').textContent = `Seu filme de ${selectedGenre ? selectedGenre.name : "gênero indefinido"} está pronto`;
+  document.getElementById('resultText').textContent = verdict;
+  resultBox.classList.add('open');
+  resultBox.scrollIntoView({behavior:'smooth', block:'center'});
+};
+
+renderRoles();
+</script>
+</body>
+</html>
