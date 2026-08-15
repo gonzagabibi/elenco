@@ -275,13 +275,26 @@ const CATEGORIES = [
 const CRITERIA = ["prof","cache","prestige","carisma","versat","bilheteria"];
 const CRITERIA_LABELS = {prof:"Profission.", cache:"Cachê", prestige:"Prestígio", carisma:"Carisma", versat:"Versatilid.", bilheteria:"Bilheteria"};
 
-// gera pontuações 0-100 determinísticas a partir do nome (fixas, mas variadas)
+// referência real: Forbes "Highest-Paid Actors of 2025" - usada pra calibrar cachê de quem está na lista
+// (não existe dado público confiável de "prestígio" ou "carisma" — só cachê tem fonte de mercado real)
+const REAL_CACHE_TIER = {
+  "Adam Sandler":98, "Tom Cruise":96, "Mark Wahlberg":94, "Scarlett Johansson":92,
+  "Brad Pitt":90, "Denzel Washington":86, "Jack Black":78, "Millie Bobby Brown":76,
+  "Reese Witherspoon":74, "Cameron Diaz":66, "Zendaya":68, "Anya Taylor-Joy":64,
+  "Florence Pugh":63, "Glen Powell":62, "Jenna Ortega":65, "Pedro Pascal":66,
+};
+
 function hashSeed(str){
   let h = 0;
   for(let i=0;i<str.length;i++){ h = (h*31 + str.charCodeAt(i)) >>> 0; }
   return h;
 }
 function statFor(name, key, base=55, spread=40){
+  if(key==='cache' && REAL_CACHE_TIER[name] !== undefined){
+    // ainda varia um pouquinho pra não ficar sempre idêntico entre partidas do mesmo nome
+    const jitter = (hashSeed(name+'cachejit') % 7) - 3;
+    return Math.max(1, Math.min(100, REAL_CACHE_TIER[name] + jitter));
+  }
   const seed = hashSeed(name+key);
   return Math.max(15, Math.min(99, base + (seed % (spread*2)) - spread));
 }
@@ -319,7 +332,58 @@ const EVENTS = [
      {title:"Manter a versão original", desc:"Confiar na visão artística original.", good:true, msg:"Quem gostou, amou de verdade — o filme ganha um público fiel e vocal.", delta:1},
      {title:"Refilmar o terceiro ato inteiro", desc:"Resposta radical ao feedback.", good:false, msg:"Estourou o orçamento e o resultado ficou morno — nem lá nem cá.", delta:-5},
    ]},
+  {title:"Briga de egos no set", text:"Dois membros do elenco principal não estão se falando fora das cenas. A tensão está afetando o clima da produção.",
+   options:[
+     {title:"Chamar os dois pra uma conversa", desc:"Mediar o conflito diretamente.", good:true, msg:"Resolveram as diferenças — e a química em cena até melhorou depois disso.", delta:3},
+     {title:"Separar as cenas e evitar contato", desc:"Reescrever a logística de gravação.", good:false, msg:"Funcionou no set, mas a falta de química aparece na tela.", delta:-3},
+     {title:"Deixar vazar pra imprensa de propósito", desc:"Usar o climão como marketing.", good:false, msg:"Gerou buzz de curto prazo, mas o filme virou piada antes de estrear.", delta:-4},
+   ]},
+  {title:"Data de estreia colidindo com blockbuster rival", text:"Um estúdio concorrente anunciou um lançamento gigante pra mesma semana da sua estreia.",
+   options:[
+     {title:"Manter a data e brigar de frente", desc:"Confiar na força do próprio elenco.", good:true, msg:"A aposta valeu — o filme achou seu público mesmo com a concorrência.", delta:2},
+     {title:"Adiar a estreia em duas semanas", desc:"Evitar a disputa direta de bilheteria.", good:true, msg:"Sem a concorrência na mesma semana, o filme teve mais espaço nas salas.", delta:3},
+     {title:"Reduzir o número de salas de exibição", desc:"Concentrar em menos cinemas com mais sessões.", good:false, msg:"Menos gente teve acesso ao filme na estreia — números de bilheteria sofreram.", delta:-3},
+   ]},
+  {title:"Crítica antecipada mista", text:"As primeiras resenhas embargadas chegaram divididas entre elogios ao elenco e críticas ao roteiro.",
+   options:[
+     {title:"Focar a campanha nos elogios ao elenco", desc:"Marketing seletivo, só com as citações boas.", good:true, msg:"Estratégia funcionou — o público foi atraído pelas atuações e perdoou o roteiro.", delta:2},
+     {title:"Cancelar a pré-estreia com imprensa", desc:"Evitar mais exposição antes do lançamento oficial.", good:false, msg:"Pareceu insegurança — gerou ainda mais especulação negativa antes da estreia.", delta:-4},
+     {title:"Deixar as resenhas circularem livremente", desc:"Sem interferir na cobertura da imprensa.", good:true, msg:"A transparência foi bem recebida — o público confiou mais no filme por isso.", delta:1},
+   ]},
 ];
+
+const SYNOPSIS_INTROS = {
+  "Terror": [
+    "vive o centro de um terror que exige {verb}",
+    "carrega o peso de um pesadelo que não termina quando as luzes se acendem — {verb}",
+    "descobre cedo demais que o verdadeiro terror começa em casa, precisando {verb}"
+  ],
+  "Comédia Romântica": [
+    "se vê no centro de uma comédia romântica que exige {verb}",
+    "nunca imaginou que precisaria {verb} só pra conseguir um encontro decente",
+    "tropeça de um mal-entendido pro outro até precisar {verb}"
+  ],
+  "Ação/Blockbuster": [
+    "vira o centro de um blockbuster que exige {verb}",
+    "não tem tempo pra respirar num filme que exige {verb}",
+    "carrega o peso do mundo (literalmente) precisando {verb}"
+  ],
+  "Drama Premiado": [
+    "vive o centro de um drama que exige {verb}",
+    "enfrenta, em silêncio, um dilema que exige {verb}",
+    "carrega décadas de história familiar precisando {verb}"
+  ],
+  "Musical": [
+    "descobre que só a música resolve, precisando {verb}",
+    "vive o centro de um musical que exige {verb}",
+    "encontra na voz a única forma de {verb}"
+  ],
+  "Suspense Psicológico": [
+    "vive o centro de um suspense que exige {verb}",
+    "não sabe mais em quem confiar, precisando {verb}",
+    "percebe, tarde demais, que precisa {verb}"
+  ],
+};
 
 /* ============= ESTADO ============= */
 let selectedGenre = null;
@@ -569,7 +633,11 @@ function buildSynopsisFor(castObj, genre){
   const triangulo = castObj["Terceira pessoa do triângulo amoroso"];
   const coringa = castObj[WILDCARD_ROLE];
 
-  let s = `${princ.name} vive o centro de um ${g.name.toLowerCase()} que exige ${g.synVerb}. `;
+  const templates = SYNOPSIS_INTROS[g.name] || [`vive o centro de um ${g.name.toLowerCase()} que exige {verb}`];
+  const template = templates[Math.floor(Math.random()*templates.length)];
+  const intro = template.replace('{verb}', g.synVerb);
+
+  let s = `${princ.name} ${intro}. `;
   if(pai || mae){ s += `Em casa, ${[pai?pai.name:null, mae?mae.name:null].filter(Boolean).join(" e ")} tentam segurar as pontas. `; }
   if(irmao){ s += `${irmao.name} entra como a única pessoa disposta a dizer a verdade. `; }
   if(amigo){ s += `${amigo.name} é o alívio cômico que ninguém sabia que precisava. `; }
@@ -578,7 +646,12 @@ function buildSynopsisFor(castObj, genre){
   if(vilao){ s += `${vilao.name} comanda a ameaça que dá o tom do filme. `; }
   if(vilaoBom){ s += `${vilaoBom.name} vira a virada de mesa que ninguém esperava. `; }
   if(coringa && coringa.wildcardChoice){ s += `${coringa.name} surge como ${coringa.wildcardChoice.toLowerCase()}. `; }
-  s += `Um filme sobre o que sobra quando todo mundo já jogou suas cartas.`;
+  const closings = [
+    "Um filme sobre o que sobra quando todo mundo já jogou suas cartas.",
+    "No fim, a pergunta nunca foi quem vence — e sim quem sobrevive à própria escolha.",
+    "Uma história sobre o preço de continuar de pé quando tudo pede pra desistir."
+  ];
+  s += closings[Math.floor(Math.random()*closings.length)];
   return s;
 }
 
